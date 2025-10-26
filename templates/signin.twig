@@ -1,0 +1,32 @@
+{% extends "auth_layout.twig" %}
+
+{% block auth_title %}Sign in to your account{% endblock %}
+
+{% block form_fields %}
+<div class="rounded-md shadow-sm -space-y-px">
+  <div>
+    <label for="email" class="sr-only">Email address</label>
+    <input id="email" name="email" type="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Email address">
+  </div>
+  <div>
+    <label for="password" class="sr-only">Password</label>
+    <input id="password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Password">
+  </div>
+</div>
+{% endblock %}
+
+{% block submit_text %}Sign in{% endblock %}
+
+{% block extra_content %}
+<div class="text-sm text-center">
+  <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
+    Forgot your password?
+  </a>
+</div>
+<div class="text-sm text-center mt-4">
+  Don't have an account?
+  <a href="/signup" class="font-medium text-indigo-600 hover:text-indigo-500">
+    Sign up
+  </a>
+</div>
+{% endblock %}

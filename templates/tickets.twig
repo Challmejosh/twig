@@ -1,0 +1,51 @@
+{% extends "dashboard_layout.twig" %}
+
+{% block title %}All Tickets - TicketDesk{% endblock %}
+
+{% block dashboard_content %}
+<div class="px-4 py-6 sm:px-0">
+  <h1 class="text-2xl font-bold mb-6">All Tickets</h1>
+
+  {% if tickets %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for ticket in tickets %}
+    <div class="bg-white shadow-md rounded-lg p-4 border border-slate-200">
+      <div class="flex justify-between items-start mb-2">
+        <h3 class="text-lg font-semibold text-gray-900 truncate">{{ ticket.title }}</h3>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+          {% if ticket.status == 'open' %}bg-green-100 text-green-800
+          {% elseif ticket.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+          {% else %}bg-gray-100 text-gray-800{% endif %}">
+          {{ ticket.status|replace({'_': ' '})|title }}
+        </span>
+      </div>
+      <p class="text-gray-600 text-sm mb-4 line-clamp-3">{{ ticket.desc|default('No description provided.') }}</p>
+      <div class="flex items-center justify-between">
+        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+          {% if ticket.priority == 'high' %}bg-red-100 text-red-800
+          {% elseif ticket.priority == 'medium' %}bg-yellow-100 text-yellow-800
+          {% elseif ticket.priority == 'low' %}bg-green-100 text-green-800
+          {% else %}bg-gray-100 text-gray-800{% endif %}">
+          {{ ticket.priority|title }}
+        </span>
+        <a href="/tickets/{{ ticket.id }}" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+          View Details
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-10 px-6 border-2 border-dashed border-gray-300 rounded-lg">
+    <i class="fas fa-ticket-alt mx-auto h-12 w-12 text-gray-400"></i>
+    <h3 class="mt-2 text-sm font-medium text-gray-900">No tickets</h3>
+    <p class="mt-1 text-sm text-gray-500">Get started by creating a new ticket.</p>
+    <div class="mt-6">
+      <a href="/create-ticket" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+        Create Ticket
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
