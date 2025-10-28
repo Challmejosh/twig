@@ -1,42 +1,120 @@
 {% extends "base.twig" %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50">
+<div class="relative h-screen flex flex-col lg:flex-row items-start justify-start">
   <!-- Navigation -->
-  <nav class="bg-white shadow-sm border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
-        <div class="flex">
-          <div class="flex-shrink-0 flex items-center">
-            <h1 class="text-xl font-bold text-indigo-600">TicketDesk</h1>
+  <nav class="sticky top-0 lg:static z-50 shadow-lg lg:shadow-none w-full lg:w-[300px] h-20 lg:h-screen p-3 lg:border-r lg:border-r-slate-100 bg-white flex lg:flex-col gap-6 lg:items-start lg:justify-start items-center justify-between">
+    <div class="text-2xl font-bold text-indigo-600">
+      TicketFlow
+    </div>
+    <!-- Desktop nav -->
+    <div class="w-full h-full hidden lg:flex flex-col gap-3 items-start justify-between">
+      <div class="w-full flex flex-col gap-3 items-start justify-center">
+        <a href="/dashboard" class="{% if app.request.getPathInfo() == '/dashboard' %}bg-[#3b82f6]/20 text-[#3b82f6]{% else %}hover:bg-[#3b82f6]/20 hover:text-[#3b82f6]{% endif %} flex gap-2 items-center justify-start w-full rounded-lg p-2 capitalize font-semibold">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+          <p class="text-sm">dashboard</p>
+        </a>
+        <a href="/tickets" class="{% if app.request.getPathInfo() == '/tickets' %}bg-[#3b82f6]/20 text-[#3b82f6]{% else %}hover:bg-[#3b82f6]/20 hover:text-[#3b82f6]{% endif %} flex gap-2 items-center justify-start w-full rounded-lg p-2 capitalize font-semibold">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <p class="text-sm">tickets</p>
+        </a>
+        <a href="/create-ticket" class="{% if app.request.getPathInfo() == '/create-ticket' %}bg-[#3b82f6]/20 text-[#3b82f6]{% else %}hover:bg-[#3b82f6]/20 hover:text-[#3b82f6]{% endif %} flex gap-2 items-center justify-start w-full rounded-lg p-2 capitalize font-semibold">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          <p class="text-sm">create ticket</p>
+        </a>
+      </div>
+      <!-- Logout -->
+      <div class="w-full flex flex-col gap-3 items-start justify-center">
+        <a href="/logout" class="flex gap-2 items-center justify-start w-full rounded-lg p-2 capitalize font-semibold hover:bg-[#3b82f6]/20 hover:text-[#3b82f6] cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+          </svg>
+          <p class="text-sm">logout</p>
+        </a>
+        <div class="border-t cursor-pointer border-t-slate-400 p-2 w-full flex gap-2 items-center justify-start">
+          <div class="w-[50px] h-[50px] bg-[#f8fafc] flex items-center justify-center font-bold text-center rounded-full uppercase text-[#3b82f6]">
+            {{ user.name|split(' ')|first|slice(0,1) }}{{ user.name|split(' ')|last|slice(0,1) }}
           </div>
-          <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-            <a href="/dashboard" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-              Dashboard
-            </a>
-            <a href="/tickets" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-              Tickets
-            </a>
-            <a href="/create-ticket" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-              Create Ticket
-            </a>
+          <div class="text-xs">
+            <p class="font-semibold capitalize text-sm">{{ user.name }}</p>
+            <p class="lowercase">{{ user.email }}</p>
           </div>
         </div>
-        <div class="hidden sm:ml-6 sm:flex sm:items-center">
-          <span class="text-sm text-gray-700 mr-4">Welcome, {{ user.name }}</span>
-          <form action="/logout" method="POST" class="inline">
-            <button type="submit" class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
-              Logout
-            </button>
-          </form>
+      </div>
+    </div>
+    <!-- Mobile menu button -->
+    <div class="lg:hidden flex items-center justify-center text-center rounded-lg h-10 w-10 shadow-md bg-white cursor-pointer" onclick="toggleMobileMenu()">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </div>
+    <!-- Mobile nav -->
+    <div id="mobile-menu" class="lg:hidden fixed inset-0 bg-black/20 backdrop-blur z-50 hidden">
+      <div class="flex items-center justify-end p-3">
+        <button onclick="toggleMobileMenu()" class="flex items-center justify-center text-center rounded-lg h-10 w-10 shadow-md bg-white cursor-pointer">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="w-[60%] bg-white p-3 h-full flex flex-col gap-3 items-start justify-between ml-auto">
+        <div class="w-full pt-8 flex flex-col gap-3 items-start justify-center">
+          <a href="/dashboard" class="{% if app.request.getPathInfo() == '/dashboard' %}bg-[#3b82f6]/20 text-[#3b82f6]{% else %}hover:bg-[#3b82f6]/20 hover:text-[#3b82f6]{% endif %} flex gap-2 items-center justify-start w-full rounded-lg p-2 capitalize font-semibold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <p class="text-sm">dashboard</p>
+          </a>
+          <a href="/tickets" class="{% if app.request.getPathInfo() == '/tickets' %}bg-[#3b82f6]/20 text-[#3b82f6]{% else %}hover:bg-[#3b82f6]/20 hover:text-[#3b82f6]{% endif %} flex gap-2 items-center justify-start w-full rounded-lg p-2 capitalize font-semibold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <p class="text-sm">tickets</p>
+          </a>
+          <a href="/create-ticket" class="{% if app.request.getPathInfo() == '/create-ticket' %}bg-[#3b82f6]/20 text-[#3b82f6]{% else %}hover:bg-[#3b82f6]/20 hover:text-[#3b82f6]{% endif %} flex gap-2 items-center justify-start w-full rounded-lg p-2 capitalize font-semibold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            <p class="text-sm">create ticket</p>
+          </a>
+        </div>
+        <!-- Logout -->
+        <div class="w-full flex flex-col gap-3 items-start justify-center">
+          <a href="/logout" class="flex gap-2 items-center justify-start w-full rounded-lg p-2 capitalize font-semibold hover:bg-[#3b82f6]/20 hover:text-[#3b82f6] cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            <p class="text-sm">logout</p>
+          </a>
+          <div class="border-t cursor-pointer border-t-slate-400 p-2 w-full flex gap-2 items-center justify-start">
+            <div class="w-[50px] h-[50px] bg-[#f8fafc] flex items-center justify-center font-bold text-center rounded-full uppercase text-[#3b82f6]">
+              {{ user.name|split(' ')|first|slice(0,1) }}{{ user.name|split(' ')|last|slice(0,1) }}
+            </div>
+            <div class="text-xs">
+              <p class="font-semibold capitalize text-sm">{{ user.name }}</p>
+              <p class="lowercase">{{ user.email }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </nav>
-
   <!-- Main content -->
-  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+  <div class="h-full overflow-y-auto w-full flex flex-col items-start justify-start">
     {% block dashboard_content %}{% endblock %}
-  </main>
+  </div>
 </div>
+
+<script>
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  menu.classList.toggle('hidden');
+}
+</script>
 {% endblock %}

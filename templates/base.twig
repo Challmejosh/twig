@@ -23,6 +23,14 @@
                 notification.remove();
             }, 3000);
         }
+
+        // Animation utilities
+        function animateElement(selector, animation) {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.style.animation = animation;
+            }
+        }
     </script>
 </body>
 </html>

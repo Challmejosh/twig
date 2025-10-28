@@ -19,9 +19,8 @@ class Router
         $this->ticketManager = $ticketManager;
     }
 
-    public function handleRequest()
+    public function handleRequest(Request $request)
     {
-        $request = Request::createFromGlobals();
         $path = $request->getPathInfo();
         $method = $request->getMethod();
 
@@ -59,6 +58,9 @@ class Router
             case '/signup':
                 $this->handleSignup($request);
                 break;
+            case '/logout':
+                $this->handleLogout();
+                break;
             case '/dashboard':
                 $this->renderDashboard($request);
                 break;
@@ -85,21 +87,49 @@ class Router
 
     private function handleSignin($request)
     {
+        $success = $request->query->get('success');
+
         if ($request->isMethod('POST')) {
             $email = $request->request->get('email');
             $password = $request->request->get('password');
 
-            if ($this->auth->login($email, $password)) {
-                $response = new RedirectResponse('/dashboard');
-                $response->send();
-                return;
+            $url = "https://ticket-backend-zeta.vercel.app/api/auth/signin";
+            $data = [
+                "email" => $email,
+                "password" => $password
+            ];
+
+            $options = [
+                "http" => [
+                    "header"  => "Content-Type: application/json\r\n",
+                    "method"  => "POST",
+                    "content" => json_encode($data),
+                ],
+            ];
+
+            $context  = stream_context_create($options);
+            $response = file_get_contents($url, false, $context);
+
+            if ($response === FALSE) {
+                $error = "Something went wrong!";
             } else {
-                echo $this->twig->render('signin.twig', ['error' => 'Invalid credentials']);
-                return;
+                $resData = json_decode($response, true);
+                if (isset($resData["user"])) {
+                    session_start();
+                    $_SESSION["user"] = $resData["user"];
+                    $response = new RedirectResponse('/dashboard');
+                    $response->send();
+                    return;
+                } else {
+                    $error = $resData["message"] ?? "Invalid login details.";
+                }
             }
+
+            echo $this->twig->render('signin.twig', ['error' => $error, 'email' => $email, 'success' => $success]);
+            return;
         }
 
-        echo $this->twig->render('signin.twig');
+        echo $this->twig->render('signin.twig', ['success' => $success]);
     }
 
     private function handleSignup($request)
@@ -108,21 +138,43 @@ class Router
             $name = $request->request->get('name');
             $email = $request->request->get('email');
             $password = $request->request->get('password');
-            $passwordConfirm = $request->request->get('passwordConfirm');
 
-            if ($password !== $passwordConfirm) {
-                echo $this->twig->render('signup.twig', ['error' => 'Passwords do not match']);
-                return;
-            }
+            $url = "https://ticket-backend-zeta.vercel.app/api/auth/register";
+            $data = [
+                "name" => $name,
+                "email" => $email,
+                "password" => $password
+            ];
 
-            if ($this->auth->register($name, $email, $password)) {
-                $response = new RedirectResponse('/signin');
-                $response->send();
-                return;
+            $options = [
+                "http" => [
+                    "header"  => "Content-Type: application/json\r\n",
+                    "method"  => "POST",
+                    "content" => json_encode($data),
+                ],
+            ];
+
+            $context  = stream_context_create($options);
+            $response = file_get_contents($url, false, $context);
+
+            if ($response === FALSE) {
+                $error = "Something went wrong!";
             } else {
-                echo $this->twig->render('signup.twig', ['error' => 'Registration failed']);
-                return;
+                $resData = json_decode($response, true);
+                if (isset($resData["message"])) {
+                    // Show success message
+                    $success = $resData["message"];
+                    // Redirect to login page
+                    $response = new RedirectResponse('/signin?success=' . urlencode($success));
+                    $response->send();
+                    return;
+                } else {
+                    $error = "Unexpected server response.";
+                }
             }
+
+            echo $this->twig->render('signup.twig', ['error' => $error, 'name' => $name, 'email' => $email]);
+            return;
         }
 
         echo $this->twig->render('signup.twig');
@@ -197,7 +249,7 @@ class Router
                 $priority = $request->request->get('priority');
 
                 $this->ticketManager->updateTicket($ticketId, $title, $desc, $status, $priority);
-                $response = new RedirectResponse("/tickets/{$ticketId}");
+                $response = new RedirectResponse("/tickets/{$ticketId}?updated=1");
                 $response->send();
                 return;
             }
@@ -210,6 +262,14 @@ class Router
             'ticket' => $ticket,
             'isEditing' => $isEditing,
         ]);
+    }
+
+    private function handleLogout()
+    {
+        $this->auth->logout();
+        $response = new RedirectResponse('/');
+        $response->send();
+        return;
     }
 
     private function render404()

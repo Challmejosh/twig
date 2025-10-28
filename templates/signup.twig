@@ -1,35 +1,112 @@
 {% extends "auth_layout.twig" %}
 
-{% block auth_title %}Create your account{% endblock %}
-
-{% block form_fields %}
-<div class="rounded-md shadow-sm -space-y-px">
-  <div>
-    <label for="name" class="sr-only">Full Name</label>
-    <input id="name" name="name" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Full Name">
+{% block auth_form %}
+<form action="{{ app.request.requestUri }}" method="POST" class="flex flex-col w-full sm:w-fit sm:min-w-[500px] gap-6 items-center justify-center shadow-lg rounded-lg bg-white dark:bg-slate-900/70 dark:backdrop-blur-sm p-8 shadow-soft border border-slate-200 dark:border-slate-800">
+  <div class="flex flex-col gap-2 items-center justify-center text-center">
+    <h2 class="text-2xl capitalize font-bold text-text-light dark:text-text-dark">
+      create account
+    </h2>
+    <p class="text-slate-500 dark:text-slate-400 mt-1">
+      Join us today and start managing your tickets effortlessly.
+    </p>
   </div>
-  <div>
-    <label for="email" class="sr-only">Email address</label>
-    <input id="email" name="email" type="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Email address">
+  {% if error %}
+  <div class="w-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded animate-fade-in">
+    {{ error }}
   </div>
-  <div>
-    <label for="password" class="sr-only">Password</label>
-    <input id="password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Password">
+  {% endif %}
+  <div class="flex flex-col gap-2 items-start justify-center w-full transition-all transform duration-300 ease-in-out">
+    <div class="w-full h-full pb-4 relative transition-all transform duration-300 ease-in-out">
+      <label class="block capitalize text-sm font-medium text-slate-700 dark:text-slate-300" for="name">
+        full name
+      </label>
+      <div class="mt-1">
+        <input
+          id="name"
+          name="name"
+          class="block w-full appearance-none rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:text-sm dark:text-white"
+          placeholder="John Doe"
+          value="{{ name|default('') }}"
+        />
+      </div>
+      {% if error and not name %}
+      <p class="absolute bottom-0 text-xs text-red-400 mt-1 transition-all transform duration-300 ease-in-out">
+        Please enter your full name
+      </p>
+      {% endif %}
+    </div>
+    <div class="w-full h-full pb-4 relative transition-all transform duration-300 ease-in-out">
+      <label class="block capitalize text-sm font-medium text-slate-700 dark:text-slate-300" for="email">
+        email address
+      </label>
+      <div class="mt-1">
+        <input
+          id="email"
+          name="email"
+          class="block w-full appearance-none rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:text-sm dark:text-white"
+          placeholder="you@example.com"
+          value="{{ email|default('') }}"
+        />
+      </div>
+      {% if error and (not email or not email_regex) %}
+      <p class="absolute bottom-0 text-xs text-red-400 mt-1 transition-all transform duration-300 ease-in-out">
+        Please enter a valid email
+      </p>
+      {% endif %}
+    </div>
+    <div class="w-full h-full pb-4 relative transition-all transform duration-300 ease-in-out">
+      <label class="block capitalize text-sm font-medium text-slate-700 dark:text-slate-300" for="password">
+        password
+      </label>
+      <div class="mt-1">
+        <input
+          id="password"
+          name="password"
+          type="password"
+          class="block w-full appearance-none rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:text-sm dark:text-white"
+          placeholder="*********"
+        />
+      </div>
+      {% if error and (not password or password|length < 8 or not password_uppercase or not password_number or not password_symbol or password_contains_name or password_contains_email) %}
+      <p class="absolute bottom-0 text-xs text-red-400 mt-1 transition-all transform duration-300 ease-in-out">
+        {% if password|length < 8 %}Password must be at least 8 characters{% elseif not password_uppercase %}Password must contain uppercase{% elseif not password_number %}Password must contain number{% elseif not password_symbol %}Password must contain symbol{% elseif password_contains_name %}Password cannot contain name{% elseif password_contains_email %}Password cannot contain email{% else %}Please enter a valid password{% endif %}
+      </p>
+      {% endif %}
+    </div>
+    <div class="w-full h-full pb-4 relative transition-all transform duration-300 ease-in-out">
+      <label class="block capitalize text-sm font-medium text-slate-700 dark:text-slate-300" for="passwordConfirm">
+        confirm password
+      </label>
+      <div class="mt-1">
+        <input
+          id="passwordConfirm"
+          name="passwordConfirm"
+          type="password"
+          class="block w-full appearance-none rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:text-sm dark:text-white"
+          placeholder="*********"
+        />
+      </div>
+      {% if error and (not passwordConfirm or passwordConfirm != password) %}
+      <p class="absolute bottom-0 text-xs text-red-400 mt-1 transition-all transform duration-300 ease-in-out">
+        Passwords do not match
+      </p>
+      {% endif %}
+    </div>
   </div>
-  <div>
-    <label for="passwordConfirm" class="sr-only">Confirm Password</label>
-    <input id="passwordConfirm" name="passwordConfirm" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Confirm Password">
-  </div>
-</div>
-{% endblock %}
-
-{% block submit_text %}Sign up{% endblock %}
-
-{% block extra_content %}
-<div class="text-sm text-center mt-4">
+  <button
+    type="submit"
+    class="flex w-full min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 px-6 bg-[#3b82f6] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-background-dark"
+  >
+    Sign up
+  </button>
+</form>
+<p class="">
   Already have an account?
-  <a href="/signin" class="font-medium text-indigo-600 hover:text-indigo-500">
+  <a
+    href="/signin"
+    class="text-blue-400 font-medium hover:text-blue-500 ml-1 hover:underline transform transition-all duration-300 ease-in-out"
+  >
     Sign in
   </a>
-</div>
+</p>
 {% endblock %}
