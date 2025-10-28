@@ -76,9 +76,40 @@
   Don't have an account?
   <a
     href="/signup"
-    class="text-blue-400 font-medium hover:text-blue-500 ml-1 hover:underline transform transition-all duration-300 ease-in-out"
+    class="text-blue-400 font-medium hover:text-blue-500 ml-1 hover:underline transform transition-all duration-200 ease-in-out"
   >
     Sign up
   </a>
 </p>
-{% endblock %}
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  fetch(form.action, {
+    method: 'POST',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      window.location.href = '/dashboard';
+    } else {
+      // Display error message
+      const errorDiv = document.querySelector('.bg-red-100');
+      if (errorDiv) {
+        errorDiv.querySelector('p').textContent = data.error;
+        errorDiv.style.display = 'block';
+      } else {
+        // Create error div if not present
+        const newErrorDiv = document.createElement('div');
+        newErrorDiv.className = 'w-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded animate-fade-in';
+        newErrorDiv.innerHTML = '<p>' + data.error + '</p>';
+        document.querySelector('.flex.flex-col.w-full.sm\\:w-fit').prepend(newErrorDiv);
+      }
+    }
+  })
+  .catch(error => console.error('Error:', error));
+});

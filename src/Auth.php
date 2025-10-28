@@ -3,18 +3,37 @@ namespace App;
 
 class Auth
 {
-    private $pdo;
+    private $apiBaseUrl = 'https://ticket-backend-zeta.vercel.app/';
+    // private $apiBaseUrl = 'http://localhost:3000';
 
-    public function __construct()
+    private function makeApiCall($method, $url, $data = null)
     {
-        $this->pdo = new \PDO('sqlite:' . __DIR__ . '/../database.sqlite');
-        $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $this->pdo->exec("CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
-        )");
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $this->apiBaseUrl . $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+        ]);
+
+        if ($data) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        }
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response === false) {
+            return ['error' => 'API call failed'];
+        }
+
+        $decoded = json_decode($response, true);
+        if ($httpCode >= 200 && $httpCode < 300) {
+            return $decoded;
+        } else {
+            return ['error' => $decoded['message'] ?? 'Something went wrong'];
+        }
     }
 
     public function register($name, $email, $password, $passwordConfirm)
@@ -39,67 +58,59 @@ class Auth
             return ['success' => false, 'error' => 'Passwords do not match'];
         }
 
-        // Check if user already exists
-        $stmt = $this->pdo->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        if ($stmt->fetch()) {
-            return ['success' => false, 'error' => 'User already exists'];
-        }
-
-        $id = uniqid();
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-        $stmt = $this->pdo->prepare("INSERT INTO users (id, name, email, password) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$id, $name, $email, $hashedPassword]);
-
-        $newUser = [
-            'id' => $id,
+        $result = $this->makeApiCall('POST', 'api/auth/register', [
             'name' => $name,
             'email' => $email,
-        ];
+            'password' => $password,
+        ]);
 
-        return ['success' => true, 'user' => $newUser];
+        if (isset($result['error'])) {
+            return ['success' => false, 'error' => $result['error']];
+        }
+
+        return ['success' => true, 'message' => $result['message'] ?? 'Registration successful'];
     }
 
     public function login($email, $password)
     {
         if (empty($email) || empty($password)) {
-            return false;
+            return ['success' => false, 'error' => 'Email and password are required'];
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return false;
+            return ['success' => false, 'error' => 'Invalid email format'];
         }
         if (strlen($password) < 8) {
-            return false;
+            return ['success' => false, 'error' => 'Password must be at least 8 characters'];
         }
 
-        $stmt = $this->pdo->prepare("SELECT id, name, email, password FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user'] = [
-                'id' => $user['id'],
-                'name' => $user['name'],
-                'email' => $user['email'],
-            ];
-            return true;
+        $result = $this->makeApiCall('POST', 'api/auth/signin', [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        if (isset($result['error'])) {
+            return ['success' => false, 'error' => $result['error']];
         }
-        return false;
+
+        if (isset($result['ticketapp_session'])) {
+            $_SESSION['ticketapp_session'] = $result['ticketapp_session'];
+            return ['success' => true];
+        }
+
+        return ['success' => false, 'error' => 'Login failed'];
     }
 
     public function logout()
     {
-        unset($_SESSION['user']);
+        unset($_SESSION['ticketapp_session']);
     }
 
     public function isLoggedIn()
     {
-        return isset($_SESSION['user']);
+        return isset($_SESSION['ticketapp_session']);
     }
 
     public function getCurrentUser()
     {
-        return $_SESSION['user'] ?? null;
+        return $_SESSION['ticketapp_session'] ?? null;
     }
 }

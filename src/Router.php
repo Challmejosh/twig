@@ -25,7 +25,7 @@ class Router
         $method = $request->getMethod();
 
         // Check authentication for protected routes
-        $protectedRoutes = ['/dashboard', '/tickets', '/create-ticket', '/tickets/'];
+        // $protectedRoutes = ['/dashboard', '/tickets', '/create-ticket', '/tickets/'];
         $isProtected = false;
         foreach ($protectedRoutes as $route) {
             if (strpos($path, $route) === 0) {
@@ -93,43 +93,31 @@ class Router
             $email = $request->request->get('email');
             $password = $request->request->get('password');
 
-            $url = "https://ticket-backend-zeta.vercel.app/api/auth/signin";
-            $data = [
-                "email" => $email,
-                "password" => $password
-            ];
+            $result = $this->auth->login($email, $password);
 
-            $options = [
-                "http" => [
-                    "header"  => "Content-Type: application/json\r\n",
-                    "method"  => "POST",
-                    "content" => json_encode($data),
-                ],
-            ];
+            // Check if request is AJAX
+            $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
 
-            $context  = stream_context_create($options);
-            $response = file_get_contents($url, false, $context);
-
-            if ($response === FALSE) {
-                $error = "Something went wrong!";
+            if ($isAjax) {
+                // Return JSON response for AJAX requests
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                return;
             } else {
-                $resData = json_decode($response, true);
-                if (isset($resData["user"])) {
-                    session_start();
-                    $_SESSION["user"] = $resData["user"];
+                // Traditional form submission
+                if ($result['success']) {
                     $response = new RedirectResponse('/dashboard');
                     $response->send();
                     return;
                 } else {
-                    $error = $resData["message"] ?? "Invalid login details.";
+                    $error = $result['error'];
+                    echo $this->twig->render('signin.twig', ['error' => $error, 'email' => $email, 'success' => $success]);
+                    return;
                 }
             }
-
-            echo $this->twig->render('signin.twig', ['error' => $error, 'email' => $email, 'success' => $success]);
-            return;
         }
 
-        echo $this->twig->render('signin.twig', ['success' => $success]);
+        echo $this->twig->render('signin.twig');
     }
 
     private function handleSignup($request)
@@ -138,43 +126,31 @@ class Router
             $name = $request->request->get('name');
             $email = $request->request->get('email');
             $password = $request->request->get('password');
+            $passwordConfirm = $request->request->get('passwordConfirm');
 
-            $url = "https://ticket-backend-zeta.vercel.app/api/auth/register";
-            $data = [
-                "name" => $name,
-                "email" => $email,
-                "password" => $password
-            ];
+            $result = $this->auth->register($name, $email, $password, $passwordConfirm);
 
-            $options = [
-                "http" => [
-                    "header"  => "Content-Type: application/json\r\n",
-                    "method"  => "POST",
-                    "content" => json_encode($data),
-                ],
-            ];
+            // Check if request is AJAX
+            $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
 
-            $context  = stream_context_create($options);
-            $response = file_get_contents($url, false, $context);
-
-            if ($response === FALSE) {
-                $error = "Something went wrong!";
+            if ($isAjax) {
+                // Return JSON response for AJAX requests
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                return;
             } else {
-                $resData = json_decode($response, true);
-                if (isset($resData["message"])) {
-                    // Show success message
-                    $success = $resData["message"];
-                    // Redirect to login page
-                    $response = new RedirectResponse('/signin?success=' . urlencode($success));
+                // Traditional form submission
+                if ($result['success']) {
+                    $success = $result['message'];
+                    $response = new RedirectResponse('/signin');
                     $response->send();
                     return;
                 } else {
-                    $error = "Unexpected server response.";
+                    $error = $result['error'];
+                    echo $this->twig->render('signup.twig', ['error' => $error, 'name' => $name, 'email' => $email]);
+                    return;
                 }
             }
-
-            echo $this->twig->render('signup.twig', ['error' => $error, 'name' => $name, 'email' => $email]);
-            return;
         }
 
         echo $this->twig->render('signup.twig');
@@ -217,7 +193,11 @@ class Router
             $status = $request->request->get('status');
             $priority = $request->request->get('priority');
 
-            $this->ticketManager->createTicket($user['id'], $title, $desc, $status, $priority);
+            $result = $this->ticketManager->createTicket($user['id'], $title, $desc, $status, $priority);
+            if (isset($result['error'])) {
+                echo $this->twig->render('create_ticket.twig', ['user' => $user, 'error' => $result['error']]);
+                return;
+            }
             $response = new RedirectResponse('/tickets');
             $response->send();
             return;
@@ -238,7 +218,16 @@ class Router
 
         if ($request->isMethod('POST')) {
             if ($request->request->has('delete')) {
-                $this->ticketManager->deleteTicket($ticketId);
+                $result = $this->ticketManager->deleteTicket($user['id'], $ticketId);
+                if (isset($result['error'])) {
+                    echo $this->twig->render('ticket_view.twig', [
+                        'user' => $user,
+                        'ticket' => $ticket,
+                        'isEditing' => false,
+                        'error' => $result['error'],
+                    ]);
+                    return;
+                }
                 $response = new RedirectResponse('/tickets');
                 $response->send();
                 return;
@@ -248,7 +237,16 @@ class Router
                 $status = $request->request->get('status');
                 $priority = $request->request->get('priority');
 
-                $this->ticketManager->updateTicket($ticketId, $title, $desc, $status, $priority);
+                $result = $this->ticketManager->updateTicket($ticketId, $title, $desc, $status, $priority);
+                if (isset($result['error'])) {
+                    echo $this->twig->render('ticket_view.twig', [
+                        'user' => $user,
+                        'ticket' => $ticket,
+                        'isEditing' => true,
+                        'error' => $result['error'],
+                    ]);
+                    return;
+                }
                 $response = new RedirectResponse("/tickets/{$ticketId}?updated=1");
                 $response->send();
                 return;

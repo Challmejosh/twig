@@ -3,7 +3,7 @@
         'name' => 'ticket-app/twig',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'c4c6f5cbe27e3fc67a94e230ae95632f847d01b5',
+        'reference' => '5a809f90c9a6f7467b8e618b661679b34ca9ec1b',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -58,7 +58,7 @@
         'ticket-app/twig' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'c4c6f5cbe27e3fc67a94e230ae95632f847d01b5',
+            'reference' => '5a809f90c9a6f7467b8e618b661679b34ca9ec1b',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
